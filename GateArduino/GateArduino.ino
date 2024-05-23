@@ -4,7 +4,6 @@
 #include <ArduinoJson.h>
 #include <Servo.h>
 
-
 // Private Gate
 #define SS_RFID_1 10
 #define RST_RFID_1 9
@@ -166,41 +165,47 @@ void sendSerialData(const char *type, int status, const char *rfidTag, int dista
 
 void receiveData()
 {
-	memset(buffer, 0, BUFFER_SIZE);
-
-	if (Serial.readBytesUntil('\n', buffer, BUFFER_SIZE) > 0)
+	if (Serial.available() > 0)
 	{
-		StaticJsonDocument<200> jsonDoc;
-		DeserializationError error = deserializeJson(jsonDoc, Serial);
+		memset(buffer, 0, BUFFER_SIZE);
 
-		if (!error)
+		if (Serial.readBytesUntil('\n', buffer, BUFFER_SIZE) > 0)
 		{
-			public_always_open_gate = jsonDoc["public_always_open_gate"];
-			public_always_close_gate = jsonDoc["public_always_close_gate"];
-			public_max_car_number = jsonDoc["public_max_car_number"];
-			public_current_car_number = jsonDoc["public_current_car_number"];
+			StaticJsonDocument<200> jsonDoc;
+			DeserializationError error = deserializeJson(jsonDoc, Serial);
 
-			outgoing["public_always_open_gate"] = public_always_open_gate;
-			outgoing["public_always_close_gate"] = public_always_close_gate;
-			outgoing["public_max_car_number"] = public_max_car_number;
-			outgoing["public_current_car_number"] = public_current_car_number;
+			if (!error)
+			{
+				public_always_open_gate = jsonDoc["public_always_open_gate"];
+				public_always_close_gate = jsonDoc["public_always_close_gate"];
+				public_max_car_number = jsonDoc["public_max_car_number"];
+				public_current_car_number = jsonDoc["public_current_car_number"];
 
-			serializeJson(outgoing, Serial);
-			Serial.print('\n');
-		}
-		else
-		{
-			Serial.println("Error");
+				outgoing["public_always_open_gate"] = public_always_open_gate;
+				outgoing["public_always_close_gate"] = public_always_close_gate;
+				outgoing["public_max_car_number"] = public_max_car_number;
+				outgoing["public_current_car_number"] = public_current_car_number;
+
+				serializeJson(outgoing, Serial);
+				Serial.print('\n');
+			}
+			else
+			{
+				Serial.println("Error");
+			}
 		}
 	}
 }
 
-void handlePublicGate() {
-	if (public_always_open_gate == 1) {
+void handlePublicGate()
+{
+	if (public_always_open_gate == 1)
+	{
 		servo.write(90);
 	}
 
-	else if (public_always_close_gate == 1) {
+	else if (public_always_close_gate == 1)
+	{
 		servo.write(0);
 	}
 }
