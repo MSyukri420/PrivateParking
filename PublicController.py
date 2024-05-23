@@ -2,7 +2,7 @@ import json
 
 
 class PublicController:
-    def __init__(self, public_always_open_gate, public_always_close_gate, public_current_car_number, public_max_car_number, public_switch_on_light, public_switch_off_light, message, code):
+    def __init__(self, public_always_open_gate, public_always_close_gate, public_current_car_number, public_max_car_number, public_switch_on_light, public_switch_off_light, public_message, public_code):
         self.public_always_open_gate = public_always_open_gate
         self.public_always_close_gate = public_always_close_gate
         self.public_current_car_number = public_current_car_number

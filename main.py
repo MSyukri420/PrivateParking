@@ -1,24 +1,13 @@
 import time
 import json
 from SerialInterface import SerialInterface
-from PublicController import PublicController
-from PrivateController import PrivateController
+from Controller import Controller
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 
 from Database import Database
 
-class CombinedController:
-    def __init__(self, publicController, privateController):
-        self.publicController = publicController
-        self.privateController = privateController
-
-    def to_json(self):
-        combined_dict = {**self.publicController.__dict__, **self.privateController.__dict__}
-        return json.dumps(combined_dict, sort_keys=True, indent=4)
-
 localDatabase = Database.get_instance()
-publicController = PublicController()
-privateController = PrivateController()
+controller = Controller()
 data_received = False
 iface = SerialInterface()
 
@@ -29,42 +18,41 @@ post_response_data = {
 
 def retrieveData(client, userdata, message):
     print("New message received")
-    global publicController, privateController, localDatabase, data_received
+    global controller, privateController, localDatabase, data_received
     payload = message.payload.decode('utf-8')
     data = json.loads(payload)
     print(data)
 
     if "public_always_open_gate" in data:
-        publicController.public_always_open_gate = data["public_always_open_gate"]
+        controller.public_always_open_gate = data["public_always_open_gate"]
     if "public_always_close_gate" in data:
-        publicController.public_always_close_gate = data["public_always_close_gate"]
+        controller.public_always_close_gate = data["public_always_close_gate"]
     if "public_current_car_number" in data:
-        publicController.public_current_car_number = data["public_current_car_number"]
+        controller.public_current_car_number = data["public_current_car_number"]
     if "public_max_car_number" in data:
-        publicController.public_max_car_number = data["public_max_car_number"]
+        controller.public_max_car_number = data["public_max_car_number"]
     if "public_switch_on_light" in data:
-        publicController.public_switch_on_light = data["public_switch_on_light"]
+        controller.public_switch_on_light = data["public_switch_on_light"]
     if "public_switch_off_light" in data:
-        publicController.public_switch_off_light = data["public_switch_off_light"]
+        controller.public_switch_off_light = data["public_switch_off_light"]
 
     if "private_always_open_gate" in data:
-        privateController.private_always_open_gate = data["private_always_open_gate"]
+        controller.private_always_open_gate = data["private_always_open_gate"]
     if "private_always_close_gate" in data:
-        privateController.private_always_close_gate = data["private_always_close_gate"]
+        controller.private_always_close_gate = data["private_always_close_gate"]
     if "private_current_car_number" in data:
-        privateController.private_current_car_number = data["private_current_car_number"]
+        controller.private_current_car_number = data["private_current_car_number"]
     if "private_max_car_number" in data:
-        privateController.private_max_car_number = data["private_max_car_number"]
+        controller.private_max_car_number = data["private_max_car_number"]
     if "private_switch_on_light" in data:
-        privateController.private_switch_on_light = data["private_switch_on_light"]
+        controller.private_switch_on_light = data["private_switch_on_light"]
     if "private_switch_off_light" in data:
-        privateController.private_switch_off_light = data["private_switch_off_light"]
+        controller.private_switch_off_light = data["private_switch_off_light"]
 
     data_received = True
     # combine 2 object class into 1 object
-    combinedController = CombinedController(publicController, privateController)
-    print(combinedController.to_json())
-    iface.write_msg(combinedController.to_json())
+    print(controller.to_json())
+    iface.write_msg(controller.to_json())
 
 def handleResponseData(client, userdata, message):
     print("Response received")
@@ -155,7 +143,7 @@ if __name__ == "__main__":
 
                 if current_car_number >= max_car_number:
                     print("Carpark is full")
-                    publicController.message = "Carpark is full"
+                    controller.message = "Carpark is full"
                     # iface.write_msg(controller.toJson())
                     break
 
@@ -169,11 +157,11 @@ if __name__ == "__main__":
                 localDatabase.query("UPDATE variables SET value = 0 WHERE name = 'is_processing_carplate'", False)
                 localDatabase.query("UPDATE variables SET value = 0 WHERE name = 'is_entering'", False)
                 localDatabase.query("UPDATE variables SET value = value + 1 WHERE name = 'current_car_number'", False)
-                publicController.current_car_number = localDatabase.query(
+                controller.current_car_number = localDatabase.query(
                     "SELECT * FROM variables WHERE name = 'current_car_number' LIMIT 1")["value"]
                 # controller.car_plate = database.query("SELECT * FROM car_entry_exit_log ORDER BY id DESC LIMIT 1")["carplate"]
-                publicController.code = 12
-                print(publicController.toJson())
+                controller.code = 12
+                print(controller.toJson())
                 # iface.write_msg(controller.toJson())
 
             elif is_processing_carplate == 3:
@@ -182,7 +170,7 @@ if __name__ == "__main__":
                     "UPDATE variables SET value = 0 WHERE name = 'is_processing_carplate'", False)
                 localDatabase.query(
                     "UPDATE variables SET value = 0 WHERE name = 'is_entering'", False)
-                publicController.message = "Error in detecting carplate"
+                controller.message = "Error in detecting carplate"
                 # iface.write_msg(controller.toJson())
 
         elif response.startswith("Exit sensor activated"):
@@ -218,13 +206,13 @@ if __name__ == "__main__":
                     "UPDATE variables SET value = 0 WHERE name = 'is_exiting'", False)
                 localDatabase.query(
                     "UPDATE variables SET value = value - 1 WHERE name = 'current_car_number'", False)
-                publicController.current_car_number = localDatabase.query(
+                controller.current_car_number = localDatabase.query(
                     "SELECT * FROM variables WHERE name = 'current_car_number' LIMIT 1")["value"]
                 # controller.car_plate = database.query("SELECT * FROM car_entry_exit_log ORDER BY id DESC LIMIT 1")["carplate"]
-                publicController.code = 12
-                print(publicController.toJson())
+                controller.code = 12
+                print(controller.toJson())
                 # iface.write_msg(controller.toJson())
-                publicController.message = ""
+                controller.message = ""
 
             elif is_processing_carplate == 3:
                 print("Error in detecting carplate")
