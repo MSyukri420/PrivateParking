@@ -24,6 +24,9 @@ Servo servo;
 StaticJsonDocument<200> outgoing;
 int public_always_open_gate, public_always_close_gate, public_manual, public_max_car_number, public_current_car_number;
 
+const int BUFFER_SIZE = 512;
+char buffer[BUFFER_SIZE];
+
 MFRC522 rfid(SS_RFID_1, RST_RFID_1);
 
 void handleRFID();
@@ -163,7 +166,9 @@ void sendSerialData(const char *type, int status, const char *rfidTag, int dista
 
 void receiveData()
 {
-	if (Serial.available() > 0)
+	memset(buffer, 0, BUFFER_SIZE);
+
+	if (Serial.readBytesUntil('\n', buffer, BUFFER_SIZE) > 0)
 	{
 		StaticJsonDocument<200> jsonDoc;
 		DeserializationError error = deserializeJson(jsonDoc, Serial);
