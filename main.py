@@ -7,6 +7,14 @@ from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 
 from Database import Database
 
+class CombinedController:
+    def __init__(self, publicController, privateController):
+        self.publicController = publicController
+        self.privateController = privateController
+
+    def to_json(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
 localDatabase = Database.get_instance()
 publicController = PublicController()
 privateController = PrivateController()
@@ -36,11 +44,25 @@ def retrieveData(client, userdata, message):
     if "public_switch_on_light" in data:
         publicController.public_switch_on_light = data["public_switch_on_light"]
     if "public_switch_off_light" in data:
-        publicController.public_switch_off_light = data["value"]
+        publicController.public_switch_off_light = data["public_switch_off_light"]
+
+    if "private_always_open_gate" in data:
+        privateController.private_always_open_gate = data["private_always_open_gate"]
+    if "private_always_close_gate" in data:
+        privateController.private_always_close_gate = data["private_always_close_gate"]
+    if "private_current_car_number" in data:
+        privateController.private_current_car_number = data["private_current_car_number"]
+    if "private_max_car_number" in data:
+        privateController.private_max_car_number = data["private_max_car_number"]
+    if "private_switch_on_light" in data:
+        privateController.private_switch_on_light = data["private_switch_on_light"]
+    if "private_switch_off_light" in data:
+        privateController.private_switch_off_light = data["private_switch_off_light"]
 
     data_received = True
-    print("Data sent:" + str(publicController.toJson()))
-    iface.write_msg(publicController.toJson())
+    # combine 2 object class into 1 object
+    combinedController = CombinedController(publicController, privateController)
+    iface.write_msg(combinedController.to_json())
 
 def handleResponseData(client, userdata, message):
     print("Response received")
@@ -77,6 +99,9 @@ myMQTTClient.subscribe("rpi/post_response", 1, handleResponseData)
 if __name__ == "__main__":
     while True:
         if not data_received:
+            # localData = localDatabase.query("SELECT * from variables", False)
+            # if localData is not None:
+            #     data_received = True
             print("Waiting for data...")
             time.sleep(1)
             continue
