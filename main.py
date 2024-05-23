@@ -114,6 +114,7 @@ if __name__ == "__main__":
             continue
 
         print(f"Response: {response}")
+        time.sleep(0.1)
 
         if "type" in response and "status" in response and "rfidTag" in response and "distance" in response and "slotID" in response:
             myMQTTClient.publish("rpi/post_request", json.dumps(response), 1)
