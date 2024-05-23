@@ -193,7 +193,6 @@ void receiveData()
 
 		if (Serial.readBytesUntil('\n', buffer, BUFFER_SIZE) > 0)
 		{
-			Serial.println(buffer);
 			JsonDocument jsonDoc;
 			DeserializationError error = deserializeJson(jsonDoc, buffer);
 
