@@ -14,9 +14,9 @@ class Database:
         try:
             self.connection = mysql.connector.connect(
                 host="localhost",
-                user="root",
-                password="root",
-                database="smart_parking"
+                user="pi",
+                password="",
+                # database="smart_parking"
             )
             print("Connected to database.")
         except mysql.connector.Error as e:
