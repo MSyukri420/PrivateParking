@@ -13,7 +13,8 @@ class CombinedController:
         self.privateController = privateController
 
     def to_json(self):
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        combined_dict = {**self.publicController.__dict__, **self.privateController.__dict__}
+        return json.dumps(combined_dict, sort_keys=True, indent=4)
 
 localDatabase = Database.get_instance()
 publicController = PublicController()
