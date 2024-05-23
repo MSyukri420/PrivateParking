@@ -165,9 +165,8 @@ void receiveData()
 {
 	if (Serial.available() > 0)
 	{
-		String data = Serial.readString();
 		StaticJsonDocument<200> jsonDoc;
-		DeserializationError error = deserializeJson(jsonDoc, data);
+		DeserializationError error = deserializeJson(jsonDoc, Serial);
 
 		if (!error)
 		{
