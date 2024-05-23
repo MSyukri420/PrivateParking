@@ -47,6 +47,7 @@ void setup()
 
 void loop()
 {
+	receiveData();
 	handleRFID();
 	handleGateDetection();
 	handlePublicGate();
