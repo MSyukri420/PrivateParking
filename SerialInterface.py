@@ -64,7 +64,7 @@ class SerialInterface:
         try:
             json_msg = json.dumps(message)
             self.ser.write(json_msg.encode("utf-8"))
-            # self.ser.write(b'\n')
+            self.ser.write(b'\n')
         except TypeError:
             print("Unable to serialize message.")
 
