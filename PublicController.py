@@ -2,27 +2,25 @@ import json
 
 
 class PublicController:
-    def __init__(self, always_open_gate, always_close_gate, message, current_car_number, max_car_number, switch_on_light, switch_off_light, code, isManual):
-        self.isManual = isManual
-        self.always_open_gate = always_open_gate
-        self.always_close_gate = always_close_gate
-        self.current_car_number = current_car_number
-        self.max_car_number = max_car_number
-        self.switch_on_light = switch_on_light
-        self.switch_off_light = switch_off_light
+    def __init__(self, public_always_open_gate, public_always_close_gate, public_current_car_number, public_max_car_number, public_switch_on_light, public_switch_off_light, message, code):
+        self.public_always_open_gate = public_always_open_gate
+        self.public_always_close_gate = public_always_close_gate
+        self.public_current_car_number = public_current_car_number
+        self.public_max_car_number = public_max_car_number
+        self.public_switch_on_light = public_switch_on_light
+        self.public_switch_off_light = public_switch_off_light
         
         self.message = message
         self.code = code
 
     # default constructor
     def __init__(self):
-        self.isManual = 0
-        self.always_open_gate = 0
-        self.always_close_gate = 0
-        self.current_car_number = 0
-        self.max_car_number = 0
-        self.switch_on_light = 0
-        self.switch_off_light = 0
+        self.public_always_open_gate = 0
+        self.public_always_close_gate = 0
+        self.public_current_car_number = 0
+        self.public_max_car_number = 0
+        self.public_switch_on_light = 0
+        self.public_switch_off_light = 0
         
         self.message = ""
         self.code = 0

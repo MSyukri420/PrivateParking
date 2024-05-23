@@ -20,19 +20,17 @@ def retrieveData(client, userdata, message):
     print(data)
 
     if "public_always_open_gate" in data:
-        controller.always_open_gate = data["public_always_open_gate"]
+        controller.public_always_open_gate = data["public_always_open_gate"]
     elif "public_always_close_gate" in data:
-        controller.always_close_gate = data["public_always_close_gate"]
+        controller.public_always_close_gate = data["public_always_close_gate"]
     elif "public_current_car_number" in data:
-        controller.current_car_number = data["public_current_car_number"]
+        controller.public_current_car_number = data["public_current_car_number"]
     elif "public_max_car_number" in data:
-        controller.max_car_number = data["public_max_car_number"]
+        controller.public_max_car_number = data["public_max_car_number"]
     elif "public_switch_on_light" in data:
-        controller.switch_on_light = data["public_switch_on_light"]
+        controller.public_switch_on_light = data["public_switch_on_light"]
     elif "public_switch_off_light" in data:
-        controller.switch_off_light = data["value"]
-    elif "public_manual_light" in data:
-        controller.automation_light_status = data["value"]
+        controller.public_switch_off_light = data["value"]
 
     data_received = True
     iface.write_msg(controller.toJson())
@@ -74,7 +72,7 @@ if __name__ == "__main__":
             continue
 
         print(f"Response: {response}")
-        
+
         # Automation based on sensors
         if response.startswith("Entry sensor activated"):
             print("Python Entry sensor activated")
