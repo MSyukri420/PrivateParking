@@ -31,10 +31,6 @@ def retrieveData(client, userdata, message):
         controller.public_current_car_number = data["public_current_car_number"]
     if "public_max_car_number" in data:
         controller.public_max_car_number = data["public_max_car_number"]
-    if "public_switch_on_light" in data:
-        controller.public_switch_on_light = data["public_switch_on_light"]
-    if "public_switch_off_light" in data:
-        controller.public_switch_off_light = data["public_switch_off_light"]
 
     if "private_always_open_gate" in data:
         controller.private_always_open_gate = data["private_always_open_gate"]
@@ -44,10 +40,6 @@ def retrieveData(client, userdata, message):
         controller.private_current_car_number = data["private_current_car_number"]
     if "private_max_car_number" in data:
         controller.private_max_car_number = data["private_max_car_number"]
-    if "private_switch_on_light" in data:
-        controller.private_switch_on_light = data["private_switch_on_light"]
-    if "private_switch_off_light" in data:
-        controller.private_switch_off_light = data["private_switch_off_light"]
 
     data_received = True
     # combine 2 object class into 1 object
