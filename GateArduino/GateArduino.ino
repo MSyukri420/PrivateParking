@@ -20,7 +20,7 @@
 #define GATE_END_BACK A5
 
 Servo servo;
-StaticJsonDocument<1000> outgoing;
+JsonDocument outgoing;
 int public_always_open_gate, public_always_close_gate, public_manual, public_max_car_number, public_current_car_number, public_code;
 int private_always_open_gate, private_always_close_gate, private_manual, private_max_car_number, private_current_car_number, private_code;
 
@@ -194,7 +194,7 @@ void receiveData()
 		if (Serial.readBytesUntil('\n', buffer, BUFFER_SIZE) > 0)
 		{
 			Serial.println(buffer);
-			StaticJsonDocument<1000> jsonDoc;
+			JsonDocument jsonDoc;
 			DeserializationError error = deserializeJson(jsonDoc, buffer);
 
 			if (!error)
