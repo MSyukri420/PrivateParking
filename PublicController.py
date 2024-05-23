@@ -10,8 +10,8 @@ class PublicController:
         self.public_switch_on_light = public_switch_on_light
         self.public_switch_off_light = public_switch_off_light
         
-        self.message = message
-        self.code = code
+        self.public_message = message
+        self.public_code = code
 
     # default constructor
     def __init__(self):
@@ -22,8 +22,8 @@ class PublicController:
         self.public_switch_on_light = 0
         self.public_switch_off_light = 0
         
-        self.message = ""
-        self.code = 0
+        self.public_message = ""
+        self.public_code = 0
 
     def toJson(self):
         return json.loads(json.dumps(self.__dict__))

@@ -64,6 +64,39 @@ def saveData(client, userdata, message):
         cursor.execute(data["sql"])
         database.commit()
         return
+    
+    elif "type" in data and "status" in data and "rfidTag" in data and "distance" in data and "slotID" in data:
+        cursor = database.cursor()
+        cursor.execute("SELECT * FROM users")
+        result = cursor.fetchall()
+        print(result)
+
+        exist = False
+
+        for row in result:
+            if row["rfid_tag"] == data["rfidTag"]:
+                cursor.execute(f"INSERT INTO access_logs (user_id, event_type, timestamp) VALUES ({row['id']}, 'enter', NOW())")
+                exist = True
+                database.commit()
+
+        if not exist:
+            cursor.execute(f"INSERT INTO system_alarms (type, description, timestamp) VALUES ('{data['type']}', 'error at private gate', NOW())")
+            database.commit()
+            response = {
+                "status": "error",
+                "message": "RFID not found"
+            }
+            myMQTTClient.publish("rpi/post_response", json.dumps(response), 1)
+            return
+        elif exist:
+            response = {
+                "status": "success",
+                "message": "RFID found"
+            }
+            myMQTTClient.publish("rpi/post_response", json.dumps(response), 1)
+            return
+
+        return
 
 
 myMQTTClient.subscribe("rpi/get_request", 1, sendData)
