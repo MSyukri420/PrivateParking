@@ -62,6 +62,7 @@ def retrieveData(client, userdata, message):
     data_received = True
     # combine 2 object class into 1 object
     combinedController = CombinedController(publicController, privateController)
+    print(combinedController.to_json())
     iface.write_msg(combinedController.to_json())
 
 def handleResponseData(client, userdata, message):
