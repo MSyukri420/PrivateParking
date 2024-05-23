@@ -7,7 +7,7 @@ class SerialInterface:
     """Creates a Serial Interface with the specified parameters and allows to read from
     and write to it."""
 
-    def __init__(self, port="COM3", baud=9600):
+    def __init__(self, port="/dev/ttyUSB0", baud=9600):
         self.no_response = False
         self.timeout_timer = time.time()
         self.ser = serial.Serial(port, baudrate=baud, timeout=2)
@@ -57,9 +57,9 @@ class SerialInterface:
         """Sends a JSON-formatted command to the serial
         interface."""
         time.sleep(0.06)
-        if self.no_response:
-            # If no response was received last time, we don't send another request
-            return
+        # if self.no_response:
+        #     # If no response was received last time, we don't send another request
+        #     return
 
         try:
             json_msg = json.dumps(message)

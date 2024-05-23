@@ -172,17 +172,11 @@ void receiveData()
 		{
 			public_always_open_gate = jsonDoc["public_always_open_gate"];
 			public_always_close_gate = jsonDoc["public_always_close_gate"];
-			public_switch_on_light = jsonDoc["public_switch_on_light"];
-			public_switch_off_light = jsonDoc["public_switch_off_light"];
-			public_manual = jsonDoc["public_manual"];
 			public_max_car_number = jsonDoc["public_max_car_number"];
 			public_current_car_number = jsonDoc["public_current_car_number"];
 
 			outgoing["public_always_open_gate"] = public_always_open_gate;
 			outgoing["public_always_close_gate"] = public_always_close_gate;
-			outgoing["public_switch_on_light"] = public_switch_on_light;
-			outgoing["public_switch_off_light"] = public_switch_off_light;
-			outgoing["public_manual"] = public_manual;
 			outgoing["public_max_car_number"] = public_max_car_number;
 			outgoing["public_current_car_number"] = public_current_car_number;
 

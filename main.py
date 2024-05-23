@@ -9,7 +9,7 @@ from Database import Database
 localDatabase = Database.get_instance()
 controller = PublicController()
 data_received = False
-# iface = SerialInterface()
+iface = SerialInterface()
 
 
 def retrieveData(client, userdata, message):
@@ -35,7 +35,7 @@ def retrieveData(client, userdata, message):
         controller.automation_light_status = data["value"]
 
     data_received = True
-    # iface.write_msg(controller.toJson())
+    iface.write_msg(controller.toJson())
 
 
 
@@ -48,9 +48,9 @@ myMQTTClient.configureEndpoint(
 #     r"D:\Users\User\Programming\Swinburne Project\IOT\mqtt\44bdbb017ed61e3180473d7562a7219625694010abfe0315ab96632a7fe8402b-certificate.pem.crt"
 # )
 myMQTTClient.configureCredentials(
-    r"/home/pi/cert/AmazonRootCA1.pem",
-    r"/home/pi/cert/44bdbb017ed61e3180473d7562a7219625694010abfe0315ab96632a7fe8402b-private.pem.key",
-    r"/home/pi/cert/44bdbb017ed61e3180473d7562a7219625694010abfe0315ab96632a7fe8402b-certificate.pem.crt"
+    r"/home/pi/RPi/mqtt/AmazonRootCA1.pem",
+    r"/home/pi/RPi/mqtt/44bdbb017ed61e3180473d7562a7219625694010abfe0315ab96632a7fe8402b-private.pem.key",
+    r"/home/pi/RPi/mqtt/44bdbb017ed61e3180473d7562a7219625694010abfe0315ab96632a7fe8402b-certificate.pem.crt"
 )
 myMQTTClient.configureOfflinePublishQueueing(-1)
 myMQTTClient.configureDrainingFrequency(2)
@@ -68,13 +68,13 @@ if __name__ == "__main__":
             time.sleep(1)
             continue
 
-        # response = iface.read_msg()
-        response = None
-        # print(f"Response: {response}")
+        response = iface.read_msg()
 
         if response is None:
             continue
 
+        print(f"Response: {response}")
+        
         # Automation based on sensors
         if response.startswith("Entry sensor activated"):
             print("Python Entry sensor activated")
