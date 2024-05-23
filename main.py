@@ -51,8 +51,8 @@ def retrieveData(client, userdata, message):
 
     data_received = True
     # combine 2 object class into 1 object
-    print(controller.to_json())
-    iface.write_msg(controller.to_json())
+    print(controller.toJson())
+    iface.write_msg(controller.toJson())
 
 def handleResponseData(client, userdata, message):
     print("Response received")
@@ -112,11 +112,11 @@ if __name__ == "__main__":
             print(post_response_data)
 
             if post_response_data["status"] == "success" and post_response_data["message"] == "RFID found":
-                privateController.code = 10
-                iface.write_msg(privateController.toJson())
+                controller.code = 10
+                iface.write_msg(controller.toJson())
             elif post_response_data["status"] == "error" and post_response_data["message"] == "RFID not found":
-                privateController.code = 11
-                iface.write_msg(privateController.toJson())
+                controller.code = 11
+                iface.write_msg(controller.toJson())
 
             post_response_data["status"] = None
             post_response_data["message"] = None
