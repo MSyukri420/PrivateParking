@@ -229,6 +229,8 @@ void receiveData()
 			else
 			{
 				Serial.println("Error");
+				Serial.println(error.c_str());
+				return;
 			}
 		}
 	}
