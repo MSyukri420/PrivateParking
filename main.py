@@ -21,18 +21,19 @@ def retrieveData(client, userdata, message):
 
     if "public_always_open_gate" in data:
         controller.public_always_open_gate = data["public_always_open_gate"]
-    elif "public_always_close_gate" in data:
+    if "public_always_close_gate" in data:
         controller.public_always_close_gate = data["public_always_close_gate"]
-    elif "public_current_car_number" in data:
+    if "public_current_car_number" in data:
         controller.public_current_car_number = data["public_current_car_number"]
-    elif "public_max_car_number" in data:
+    if "public_max_car_number" in data:
         controller.public_max_car_number = data["public_max_car_number"]
-    elif "public_switch_on_light" in data:
+    if "public_switch_on_light" in data:
         controller.public_switch_on_light = data["public_switch_on_light"]
-    elif "public_switch_off_light" in data:
+    if "public_switch_off_light" in data:
         controller.public_switch_off_light = data["value"]
 
     data_received = True
+    print("Data sent:" + str(controller.toJson()))
     iface.write_msg(controller.toJson())
 
 
