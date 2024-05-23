@@ -35,7 +35,7 @@ class SerialInterface:
 
         if self.ser.in_waiting == 0:
             # Nothing received
-            print("No response from Arduino")
+            # print("No response from Arduino")
             self.no_response = True
             return None
 
