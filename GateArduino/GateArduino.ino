@@ -211,20 +211,21 @@ void receiveData()
 				private_current_car_number = jsonDoc["private_current_car_number"];
 				private_code = jsonDoc["private_code"];
 
-				outgoing["public_always_open_gate"] = public_always_open_gate;
-				outgoing["public_always_close_gate"] = public_always_close_gate;
-				outgoing["public_max_car_number"] = public_max_car_number;
-				outgoing["public_current_car_number"] = public_current_car_number;
-				outgoing["public_code"] = public_code;
+				// outgoing["public_always_open_gate"] = public_always_open_gate;
+				// outgoing["public_always_close_gate"] = public_always_close_gate;
+				// outgoing["public_max_car_number"] = public_max_car_number;
+				// outgoing["public_current_car_number"] = public_current_car_number;
+				// outgoing["public_code"] = public_code;
 
-				outgoing["private_always_open_gate"] = private_always_open_gate;
-				outgoing["private_always_close_gate"] = private_always_close_gate;
-				outgoing["private_max_car_number"] = private_max_car_number;
-				outgoing["private_current_car_number"] = private_current_car_number;
-				outgoing["private_code"] = private_code;
+				// outgoing["private_always_open_gate"] = private_always_open_gate;
+				// outgoing["private_always_close_gate"] = private_always_close_gate;
+				// outgoing["private_max_car_number"] = private_max_car_number;
+				// outgoing["private_current_car_number"] = private_current_car_number;
+				// outgoing["private_code"] = private_code;
 
-				serializeJson(outgoing, Serial);
-				Serial.print('\n');
+				// serializeJson(outgoing, Serial);
+				// Serial.print('\n');
+				jsonDoc.clear();
 			}
 			else
 			{
