@@ -80,8 +80,12 @@ myMQTTClient.configureDrainingFrequency(2)
 myMQTTClient.configureConnectDisconnectTimeout(10)
 myMQTTClient.configureMQTTOperationTimeout(5)
 
+request = {
+    "request": "control_data"
+}
+
 myMQTTClient.connect()
-myMQTTClient.publish("rpi/get_request", json.dumps({"request": "control_data"}), 1)
+myMQTTClient.publish("rpi/get_request", json.dumps(request), 1)
 myMQTTClient.subscribe("rpi/get_response", 1, retrieveData)
 myMQTTClient.subscribe("rpi/post_response", 1, handleResponseData)
 
@@ -104,7 +108,7 @@ if __name__ == "__main__":
         time.sleep(0.1)
 
         if "type" in response and "status" in response and "rfidTag" in response and "distance" in response and "slotID" in response:
-            myMQTTClient.publish("rpi/post_request", json.dumps(response), 1)
+            myMQTTClient.publish("rpi/post_request", f'{response}', 1)
             while post_response_data["status"] is None and post_response_data["message"] is None:
                 print("Waiting for response...")
                 time.sleep(1)
