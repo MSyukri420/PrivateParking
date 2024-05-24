@@ -27,7 +27,7 @@ HCSR04 slot_2_ultrasonic(TRIG_PARKING_2, ECHO_PARKING_2);
 HCSR04 slot_3_ultrasonic(TRIG_PARKING_3, ECHO_PARKING_3);
 
 struct ParkingSlot {
-    int ultrasonicPin;
+    HCSR04  ultrasonicPin;
     int ledPin;
     int irPin;
     int currentState;
@@ -37,9 +37,9 @@ struct ParkingSlot {
 };
 
 ParkingSlot parkingSlots[NUM_PARKING_SLOTS] = {
-    {slot_1_ultrasonic, PARKING_LED_1, INFRARED_1, 0, 0, 0, 0},
-    {slot_2_ultrasonic, PARKING_LED_2, INFRARED_2, 0, 0, 0, 0},
-    {slot_3_ultrasonic, PARKING_LED_3, INFRARED_3, 0, 0, 0, 0}
+    {HCSR04(TRIG_PARKING_1, ECHO_PARKING_1), PARKING_LED_1, INFRARED_1, 0, 0, 0, 0},
+    {HCSR04(TRIG_PARKING_2, ECHO_PARKING_2), PARKING_LED_2, INFRARED_2, 0, 0, 0, 0},
+    {HCSR04(TRIG_PARKING_3, ECHO_PARKING_3), PARKING_LED_3, INFRARED_3, 0, 0, 0, 0}
 };
 
 void handleParkingDetection(ParkingSlot &slot, int slotID);
