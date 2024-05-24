@@ -12,7 +12,7 @@ data_received = False
 iface = SerialInterface()
 
 post_response_data = {
-    "type": None,
+    "status": None,
     "message": None
 }
 
