@@ -2,6 +2,7 @@
 #include <MFRC522.h>
 #include <Servo.h>
 #include <ArduinoJson.h>
+#include <HCSR04.h>
 
 // Pin Definitions
 #define PARKING_LED_1 2
@@ -20,6 +21,10 @@
 #define INFRARED_3 A3
 
 #define NUM_PARKING_SLOTS 3
+
+HCSR04 slot_1_ultrasonic(8, 9);  // initialisation class HCSR04 (trig pin , echo pin)
+HCSR04 slot_2_ultrasonic(10, 11);
+HCSR04 slot_3_ultrasonic(12, 13);
 
 struct ParkingSlot {
     int trigPin;
@@ -68,10 +73,10 @@ void handleParkingDetection(ParkingSlot &slot, int slotID) {
     const long sendInterval = 3000; // Minimum interval between sends
     unsigned long currentTime = millis();
 
-    int distanceParking = readUltrasonicDistance(slot.trigPin, slot.echoPin);
+    int distanceParking = slot_1_ultrasonic.dist();
     int infraredValue = analogRead(slot.irPin);
-    int threshold = 512;
-    bool irDetected = infraredValue < threshold;
+    int inFraredThreshold = 512;
+    bool irDetected = infraredValue < inFraredThreshold;
     bool parkingClose = distanceParking < 6;
 
     // Determine current state based on sensor readings
@@ -118,16 +123,6 @@ void handleParkingDetection(ParkingSlot &slot, int slotID) {
     }
 
     slot.previousState = slot.currentState;
-}
-
-int readUltrasonicDistance(int triggerPin, int echoPin) {
-    digitalWrite(triggerPin, LOW);
-    delayMicroseconds(2);
-    digitalWrite(triggerPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(triggerPin, LOW);
-    long duration = pulseIn(echoPin, HIGH);
-    return (int)(duration * 0.034 / 2);
 }
 
 void sendSerialData(String type, int status, int distance, int slotID) {
