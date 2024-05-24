@@ -22,13 +22,12 @@
 
 #define NUM_PARKING_SLOTS 3
 
-HCSR04 slot_1_ultrasonic(8, 9);  // initialisation class HCSR04 (trig pin , echo pin)
-HCSR04 slot_2_ultrasonic(10, 11);
-HCSR04 slot_3_ultrasonic(12, 13);
+HCSR04 slot_1_ultrasonic(TRIG_PARKING_1, ECHO_PARKING_1);
+HCSR04 slot_2_ultrasonic(TRIG_PARKING_2, ECHO_PARKING_2);
+HCSR04 slot_3_ultrasonic(TRIG_PARKING_3, ECHO_PARKING_3);
 
 struct ParkingSlot {
-    int trigPin;
-    int echoPin;
+    int ultrasonicPin;
     int ledPin;
     int irPin;
     int currentState;
@@ -38,20 +37,18 @@ struct ParkingSlot {
 };
 
 ParkingSlot parkingSlots[NUM_PARKING_SLOTS] = {
-    {TRIG_PARKING_1, ECHO_PARKING_1, PARKING_LED_1, INFRARED_1, 0, 0, 0, 0},
-    {TRIG_PARKING_2, ECHO_PARKING_2, PARKING_LED_2, INFRARED_2, 0, 0, 0, 0},
-    {TRIG_PARKING_3, ECHO_PARKING_3, PARKING_LED_3, INFRARED_3, 0, 0, 0, 0}
+    {slot_1_ultrasonic, PARKING_LED_1, INFRARED_1, 0, 0, 0, 0},
+    {slot_2_ultrasonic, PARKING_LED_2, INFRARED_2, 0, 0, 0, 0},
+    {slot_3_ultrasonic, PARKING_LED_3, INFRARED_3, 0, 0, 0, 0}
 };
 
-int readUltrasonicDistance(int triggerPin, int echoPin);
 void handleParkingDetection(ParkingSlot &slot, int slotID);
 void sendSerialData(String type, int status, int distance, int slotID);
 
 void setup() {
     Serial.begin(9600);
     for (int i = 0; i < NUM_PARKING_SLOTS; i++) {
-        pinMode(parkingSlots[i].trigPin, OUTPUT);
-        pinMode(parkingSlots[i].echoPin, INPUT);
+        pinMode(parkingSlots[i].ultrasonicPin, INPUT);
         pinMode(parkingSlots[i].ledPin, OUTPUT);
         pinMode(parkingSlots[i].irPin, INPUT);
     }
@@ -73,7 +70,7 @@ void handleParkingDetection(ParkingSlot &slot, int slotID) {
     const long sendInterval = 3000; // Minimum interval between sends
     unsigned long currentTime = millis();
 
-    int distanceParking = slot_1_ultrasonic.dist();
+    int distanceParking = slot.ultrasonicPin.dist();
     int infraredValue = analogRead(slot.irPin);
     int inFraredThreshold = 512;
     bool irDetected = infraredValue < inFraredThreshold;
