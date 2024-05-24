@@ -45,14 +45,13 @@ def retrieveData(client, userdata, message):
     # combine 2 object class into 1 object
     print(controller.toJson())
     iface.write_msg(controller.toJson())
-    response = iface.read_msg()
-    i = 5
-    if response != None:
-        while response.startswith("Error") or response.startswith("InvalidInput") and i > 0:
-            print(f"Response: {response}")
-            iface.write_msg(controller.toJson())
-            response = iface.read_msg()
-            i -= 1
+    # response = iface.read_msg()
+    # i = 5
+    # while response is None or response.startswith("Error") or response.startswith("InvalidInput") and i > 0:
+    #     print(f"Response: {response}")
+    #     iface.write_msg(controller.toJson())
+    #     response = iface.read_msg()
+    #     i -= 1
 
 def handleResponseData(client, userdata, message):
     print("Response received")
