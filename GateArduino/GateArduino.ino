@@ -25,7 +25,7 @@ int public_always_open_gate, public_always_close_gate, public_manual, public_max
 int private_always_open_gate, private_always_close_gate, private_manual, private_max_car_number, private_current_car_number, private_code;
 
 
-const int BUFFER_SIZE = 1024;
+const int BUFFER_SIZE = 512;
 char buffer[BUFFER_SIZE];
 
 MFRC522 rfid(SS_RFID_1, RST_RFID_1);
@@ -193,6 +193,7 @@ void receiveData()
 
 		if (Serial.readBytesUntil('\n', buffer, BUFFER_SIZE) > 0)
 		{
+			Serial.println(buffer);
 			JsonDocument jsonDoc;
 			DeserializationError error = deserializeJson(jsonDoc, buffer);
 

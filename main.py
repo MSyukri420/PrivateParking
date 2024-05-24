@@ -18,7 +18,7 @@ post_response_data = {
 
 def retrieveData(client, userdata, message):
     print("New message received")
-    global controller, privateController, localDatabase, data_received
+    global controller, localDatabase, data_received
     payload = message.payload.decode('utf-8')
     data = json.loads(payload)
     print(data)
