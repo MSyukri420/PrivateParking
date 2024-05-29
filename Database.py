@@ -13,7 +13,7 @@ class Database:
         try:
             self.connection = mysql.connector.connect(
                 host="localhost",
-                user="root",
+                user="pi",
                 password="",
                 database="smart_parking"
             )
