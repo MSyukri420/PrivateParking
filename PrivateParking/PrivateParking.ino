@@ -2,6 +2,7 @@
 #include <MFRC522.h>
 #include <Servo.h>
 #include <ArduinoJson.h>
+#include <HCSR04.h>
 
 // Pin Definitions
 #define PARKING_LED_1 2
@@ -20,35 +21,42 @@
 #define INFRARED_3 A3
 
 #define NUM_PARKING_SLOTS 3
+#define ERROR_DURATION 3000 
+
+HCSR04 slot_1_ultrasonic(TRIG_PARKING_1, ECHO_PARKING_1);
+HCSR04 slot_2_ultrasonic(TRIG_PARKING_2, ECHO_PARKING_2);
+HCSR04 slot_3_ultrasonic(TRIG_PARKING_3, ECHO_PARKING_3);
+
+enum ParkingState {
+    PARKING_EMPTY,
+    PARKING_OCCUPIED,
+    PARKING_ERROR
+};
 
 struct ParkingSlot {
-    int trigPin;
-    int echoPin;
+    HCSR04& ultrasonicPin;
     int ledPin;
     int irPin;
-    int currentState;
-    int previousState;
+    ParkingState currentState;
+    ParkingState previousState;
     unsigned long lastTriggerTime;
-    unsigned long lastSendTime;
+    unsigned long errorStartTime; 
+    bool errorDataSent; 
 };
 
 ParkingSlot parkingSlots[NUM_PARKING_SLOTS] = {
-    {TRIG_PARKING_1, ECHO_PARKING_1, PARKING_LED_1, INFRARED_1, 0, 0, 0, 0},
-    {TRIG_PARKING_2, ECHO_PARKING_2, PARKING_LED_2, INFRARED_2, 0, 0, 0, 0},
-    {TRIG_PARKING_3, ECHO_PARKING_3, PARKING_LED_3, INFRARED_3, 0, 0, 0, 0}
+    {slot_1_ultrasonic, PARKING_LED_1, INFRARED_1, PARKING_EMPTY, PARKING_EMPTY, 0, 0, false},
+    {slot_2_ultrasonic, PARKING_LED_2, INFRARED_2, PARKING_EMPTY, PARKING_EMPTY, 0, 0, false},
+    {slot_3_ultrasonic, PARKING_LED_3, INFRARED_3, PARKING_EMPTY, PARKING_EMPTY, 0, 0, false}
 };
-
-int readUltrasonicDistance(int triggerPin, int echoPin);
-void handleParkingDetection(ParkingSlot &slot, int slotID);
-void sendSerialData(String type, int status, int distance, int slotID);
 
 void setup() {
     Serial.begin(9600);
+    Serial.println("Setup Complete");
     for (int i = 0; i < NUM_PARKING_SLOTS; i++) {
-        pinMode(parkingSlots[i].trigPin, OUTPUT);
-        pinMode(parkingSlots[i].echoPin, INPUT);
         pinMode(parkingSlots[i].ledPin, OUTPUT);
         pinMode(parkingSlots[i].irPin, INPUT);
+         sendSerialData("Parking", PARKING_EMPTY, 0, i + 1);
     }
 }
 
@@ -56,78 +64,72 @@ void loop() {
     for (int i = 0; i < NUM_PARKING_SLOTS; i++) {
         handleParkingDetection(parkingSlots[i], i + 1);
     }
-    delay(100);  
+    delay(100);
 }
 
-const int PARKING_EMPTY = 0;
-const int PARKING_OCCUPIED = 1;
-const int PARKING_EXITING = 2;
-
 void handleParkingDetection(ParkingSlot &slot, int slotID) {
-    const long delayThreshold = 1000; // Minimum time to consider a change in parking status stable
-    const long sendInterval = 3000; // Minimum interval between sends
-    unsigned long currentTime = millis();
-
-    int distanceParking = readUltrasonicDistance(slot.trigPin, slot.echoPin);
+    int ultrasonicValue = getAverageDistance(slot.ultrasonicPin, 10);
     int infraredValue = analogRead(slot.irPin);
-    int threshold = 512;
-    bool irDetected = infraredValue < threshold;
-    bool parkingClose = distanceParking < 6;
+    bool irDetected = infraredValue < 512;
+    bool ultraDetected = ultrasonicValue < 10;
 
     // Determine current state based on sensor readings
-    if (irDetected && parkingClose) {
+    if (irDetected && ultraDetected) {
         slot.currentState = PARKING_OCCUPIED;
-    } else if (irDetected || parkingClose) {
-        slot.currentState = PARKING_EXITING;
+        slot.errorStartTime = 0;  
+        slot.errorDataSent = false;  
+    } else if (irDetected || ultraDetected) {
+        if (slot.currentState != PARKING_ERROR) {
+            slot.errorStartTime = millis();  
+        }
+        slot.currentState = PARKING_ERROR;
     } else {
         slot.currentState = PARKING_EMPTY;
+        slot.errorStartTime = 0;  
+        slot.errorDataSent = false; 
     }
 
     // Handle state transitions and LED behavior
-    if (slot.previousState != slot.currentState) {
-        slot.lastTriggerTime = currentTime;  
+    if (slot.currentState != slot.previousState) {
+        handleStateTransition(slot, slotID, ultrasonicValue);
+        slot.previousState = slot.currentState;  // Update the previous state
     }
 
-    if (currentTime - slot.lastTriggerTime >= delayThreshold) {
-        switch (slot.currentState) {
-            case PARKING_EMPTY:
-                digitalWrite(slot.ledPin, LOW); // Turn LED off
-                if (currentTime - slot.lastSendTime >= sendInterval) {
-                    slot.lastSendTime = currentTime;
-                    sendSerialData("Parking", PARKING_EMPTY, distanceParking, slotID);
-                }
-                break;
-            case PARKING_OCCUPIED:
-                digitalWrite(slot.ledPin, HIGH); // Turn LED on
-                if (currentTime - slot.lastSendTime >= sendInterval) {
-                    slot.lastSendTime = currentTime;
-                    sendSerialData("Parking", PARKING_OCCUPIED, distanceParking, slotID);
-                }
-                break;
-            case PARKING_EXITING:
-                // Blink LED
-                sendSerialData("Parking", PARKING_EXITING, distanceParking, slotID);
-                for (int i = 0; i < 10; i++) {
-                    digitalWrite(slot.ledPin, HIGH);
-                    delay(200);
-                    digitalWrite(slot.ledPin, LOW);
-                    delay(200);
-                }
-                break;
-        }
+    // Handle PARKING_ERROR state and blinking LED
+    if (slot.currentState == PARKING_ERROR) {
+        handleErrorState(slot, slotID, ultrasonicValue);
     }
-
-    slot.previousState = slot.currentState;
 }
 
-int readUltrasonicDistance(int triggerPin, int echoPin) {
-    digitalWrite(triggerPin, LOW);
-    delayMicroseconds(2);
-    digitalWrite(triggerPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(triggerPin, LOW);
-    long duration = pulseIn(echoPin, HIGH);
-    return (int)(duration * 0.034 / 2);
+void handleStateTransition(ParkingSlot &slot, int slotID, int distance) {
+    switch (slot.currentState) {
+        case PARKING_EMPTY:
+            digitalWrite(slot.ledPin, LOW); 
+            sendSerialData("Parking", PARKING_EMPTY, distance, slotID);
+            break;
+        case PARKING_OCCUPIED:
+            digitalWrite(slot.ledPin, HIGH);  
+            sendSerialData("Parking", PARKING_OCCUPIED, distance, slotID);
+            break;
+        case PARKING_ERROR:
+            slot.errorDataSent = false;  // Reset error data sent flag
+            break;
+    }
+}
+
+void handleErrorState(ParkingSlot &slot, int slotID, int distance) {
+    unsigned long currentTime = millis();
+    if (currentTime - slot.errorStartTime >= ERROR_DURATION) {
+        if (!slot.errorDataSent) {
+            sendSerialData("Parking", PARKING_ERROR, distance, slotID);
+            slot.errorDataSent = true;  // Set error data sent flag
+        }
+        // Blink LED
+        digitalWrite(slot.ledPin, HIGH);
+        delay(200);
+        digitalWrite(slot.ledPin, LOW);
+        delay(200);
+    }
 }
 
 void sendSerialData(String type, int status, int distance, int slotID) {
@@ -141,4 +143,13 @@ void sendSerialData(String type, int status, int distance, int slotID) {
     String jsonString;
     serializeJson(jsonDoc, jsonString);
     Serial.println(jsonString);
+}
+
+int getAverageDistance(HCSR04& ultrasonicPin, int numReadings) {
+    long sum = 0;
+    for (int i = 0; i < numReadings; i++) {
+        sum += ultrasonicPin.dist();
+        delay(100); 
+    }
+    return sum / numReadings;
 }

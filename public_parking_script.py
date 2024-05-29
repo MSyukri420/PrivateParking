@@ -72,14 +72,40 @@ def log_system_alarm(slot_id, alarm_type, description):
 
 def update_public_carpark_slot(slot_id, status):
     try:
+        # Update the public_carpark_slot table
         localDatabase.query(
             'UPDATE public_carpark_slot SET status = %s WHERE id = %s',
             params=(status, slot_id)
         )
+
+        # Update the variables table
+        if status == 1:  # If a car is occupying a slot
+            localDatabase.query(
+                'UPDATE variables SET value = value + 1 WHERE name = "public_current_car_number"'
+            )
+        elif status == 0:  # If a car is leaving a slot
+            localDatabase.query(
+                'UPDATE variables SET value = value - 1 WHERE name = "public_current_car_number"'
+            )
+
+        # Update public_max_car_number if needed
+        max_car_number = localDatabase.query(
+            'SELECT value FROM variables WHERE name = "public_max_car_number"', fetch_results=True
+        )
+        current_car_number = localDatabase.query(
+            'SELECT value FROM variables WHERE name = "public_current_car_number"', fetch_results=True
+        )
+        if current_car_number['value'] > max_car_number['value']:
+            localDatabase.query(
+                'UPDATE variables SET value = %s WHERE name = "public_max_car_number"',
+                params=(current_car_number['value'],)
+            )
+
         # Publish to cloud
         publish_to_cloud({"slot_id": slot_id, "status": status})
     except Exception as e:
         print(f"Error updating public carpark slot: {e}")
+
 
 def publish_to_cloud(data):
     myMQTTClient.publish("rpi/get_request", json.dumps(data), 1)

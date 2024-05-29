@@ -8,7 +8,7 @@ from AWSIoTPythonSDK.exception.AWSIoTExceptions import publishTimeoutException
 
 # MySQL Configuration
 database = mysql.connector.connect(
-    host="database.ckozhfjjzal0.us-east-1.rds.amazonaws.com",
+    host="database.ckozhfjjzal0.us-east-1.amazonaws.com",
     user="admin",
     password="aRHnjDuknZhPZc4",
     database="parking"
@@ -85,13 +85,17 @@ def saveData(topic, payload, dup, qos, retain, **kwargs):
             current_status = current_parking_status.get(slot_id, None)
 
             if status == 0 and current_status == 1:
+                print(f"Ending parking session for slot_id: {slot_id}")
                 end_parking_session(slot_id)
             elif status == 1 and current_status != 1:
+                print(f"Starting parking session for slot_id: {slot_id}")
                 start_parking_session(slot_id)
             elif status == 2:
+                print(f"Logging system alarm for slot_id: {slot_id}")
                 log_system_alarm(slot_id, "Error at parking slot", "Parking sensor error detected")
 
             current_parking_status[slot_id] = status
+            print(f"Updating public carpark slot for slot_id: {slot_id} with status: {status}")
             update_public_carpark_slot(slot_id, status)
     except Exception as e:
         print(f"Error processing data: {e}")
@@ -108,6 +112,9 @@ def start_parking_session(slot_id):
             (slot_id,)
         )
         database.commit()
+
+        update_variables(slot_id, 1)
+        
         cursor.close()
     except Exception as e:
         print(f"Error starting parking session: {e}")
@@ -124,6 +131,9 @@ def end_parking_session(slot_id):
             (slot_id,)
         )
         database.commit()
+
+        update_variables(slot_id, 0)
+        
         cursor.close()
     except Exception as e:
         print(f"Error ending parking session: {e}")
@@ -149,8 +159,43 @@ def update_public_carpark_slot(slot_id, status):
         )
         database.commit()
         cursor.close()
+
+        update_variables(slot_id, status)
     except Exception as e:
         print(f"Error updating public carpark slot: {e}")
+
+def update_variables(slot_id, status):
+    try:
+        cursor = database.cursor()
+        if status == 1:  # If a car is occupying a slot
+            cursor.execute(
+                'UPDATE variables SET value = value + 1 WHERE name = "public_current_car_number"'
+            )
+        elif status == 0:  # If a car is leaving a slot
+            cursor.execute(
+                'UPDATE variables SET value = value - 1 WHERE name = "public_current_car_number"'
+            )
+
+        # Update public_max_car_number if needed
+        cursor.execute(
+            'SELECT value FROM variables WHERE name = "public_max_car_number"'
+        )
+        max_car_number = cursor.fetchone()
+        cursor.execute(
+            'SELECT value FROM variables WHERE name = "public_current_car_number"'
+        )
+        current_car_number = cursor.fetchone()
+
+        if current_car_number["value"] > max_car_number["value"]:
+            cursor.execute(
+                'UPDATE variables SET value = %s WHERE name = "public_max_car_number"',
+                (current_car_number["value"],)
+            )
+        
+        database.commit()
+        cursor.close()
+    except Exception as e:
+        print(f"Error updating variables: {e}")
 
 # MQTT Subscriptions
 print("Subscribing to topic 'rpi/get_request'...")
