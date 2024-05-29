@@ -96,7 +96,7 @@ def saveData(topic, payload, dup, qos, retain, **kwargs):
 
             current_parking_status[slot_id] = status
             print(f"Updating public carpark slot for slot_id: {slot_id} with status: {status}")
-            update_public_carpark_slot(slot_id, status)
+            update_private_carpark_slot(slot_id, status)
     except Exception as e:
         print(f"Error processing data: {e}")
 
@@ -108,7 +108,7 @@ def start_parking_session(slot_id):
             (slot_id, datetime.now(), 'active')
         )
         cursor.execute(
-            'UPDATE public_carpark_slot SET status = 1 WHERE id = %s',
+            'UPDATE private_carpark_slot SET status = 1 WHERE id = %s',
             (slot_id,)
         )
         database.commit()
@@ -127,7 +127,7 @@ def end_parking_session(slot_id):
             (datetime.now(), 'completed', slot_id)
         )
         cursor.execute(
-            'UPDATE public_carpark_slot SET status = 0 WHERE id = %s',
+            'UPDATE private_carpark_slot SET status = 0 WHERE id = %s',
             (slot_id,)
         )
         database.commit()
@@ -150,11 +150,11 @@ def log_system_alarm(slot_id, alarm_type, description):
     except Exception as e:
         print(f"Error logging system alarm: {e}")
 
-def update_public_carpark_slot(slot_id, status):
+def update_private_carpark_slot(slot_id, status):
     try:
         cursor = database.cursor()
         cursor.execute(
-            'UPDATE public_carpark_slot SET status = %s WHERE id = %s',
+            'UPDATE private_carpark_slot SET status = %s WHERE id = %s',
             (status, slot_id)
         )
         database.commit()

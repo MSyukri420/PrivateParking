@@ -27,7 +27,7 @@ def handle_parking_event(slot_id, status, distance):
     elif status == 2:
         log_system_alarm(slot_id, "Error at parking slot", "Parking sensor error detected")
     current_parking_status[slot_id] = status
-    update_public_carpark_slot(slot_id, status)
+    update_private_carpark_slot(slot_id, status)
 
 def start_parking_session(slot_id):
     try:
@@ -36,7 +36,7 @@ def start_parking_session(slot_id):
             params=(slot_id, datetime.now(), 'active')
         )
         localDatabase.query(
-            'UPDATE public_carpark_slot SET status = 1 WHERE id = %s',
+            'UPDATE private_carpark_slot SET status = 1 WHERE id = %s',
             params=(slot_id,)
         )
         # Publish to cloud
@@ -51,7 +51,7 @@ def end_parking_session(slot_id):
             params=(datetime.now(), 'completed', slot_id)
         )
         localDatabase.query(
-            'UPDATE public_carpark_slot SET status = 0 WHERE id = %s',
+            'UPDATE private_carpark_slot SET status = 0 WHERE id = %s',
             params=(slot_id,)
         )
         # Publish to cloud
@@ -70,11 +70,11 @@ def log_system_alarm(slot_id, alarm_type, description):
     except Exception as e:
         print(f"Error logging system alarm: {e}")
 
-def update_public_carpark_slot(slot_id, status):
+def update_private_carpark_slot(slot_id, status):
     try:
-        # Update the public_carpark_slot table
+        # Update the private_carpark_slot table
         localDatabase.query(
-            'UPDATE public_carpark_slot SET status = %s WHERE id = %s',
+            'UPDATE private_carpark_slot SET status = %s WHERE id = %s',
             params=(status, slot_id)
         )
 
@@ -166,7 +166,7 @@ if __name__ == "__main__":
                     distance = data["distance"]
 
                     handle_parking_event(slot_id, status, distance)
-                    update_public_carpark_slot(slot_id, status)
+                    update_private_carpark_slot(slot_id, status)
 
                     myMQTTClient.publish("rpi/post_request", f'{response}', 1)
                     # Reset post_response_data
