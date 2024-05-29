@@ -14,7 +14,7 @@ class Database:
             self.connection = mysql.connector.connect(
                 host="localhost",
                 user="pi",
-                password="1234",
+                password="123456",
                 database="smart_parking"
             )
             print("Connected to database.")
