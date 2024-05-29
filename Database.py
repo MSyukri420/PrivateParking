@@ -1,6 +1,5 @@
 import mysql.connector
 
-
 class Database:
     instance = None
 
@@ -14,9 +13,9 @@ class Database:
         try:
             self.connection = mysql.connector.connect(
                 host="localhost",
-                user="pi",
+                user="root",
                 password="",
-                # database="smart_parking"
+                database="smart_parking"
             )
             print("Connected to database.")
         except mysql.connector.Error as e:
@@ -24,15 +23,12 @@ class Database:
             exit(1)
         self.cursor = self.connection.cursor(dictionary=True)
 
-    def query(self, sql, fetch_results=True):
+    def query(self, sql, params=None, fetch_results=True):
         result = None
         try:
-            self.cursor.execute(sql)
+            self.cursor.execute(sql, params)
             if fetch_results:
-                if "LIMIT 1" in sql:
-                    result = self.cursor.fetchone()
-                else:
-                    result = self.cursor.fetchall()
+                result = self.cursor.fetchall()
             self.connection.commit()
         except Exception as e:
             print(f"Error executing query: {e}")
