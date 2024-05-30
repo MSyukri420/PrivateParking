@@ -8,7 +8,7 @@ from AWSIoTPythonSDK.exception.AWSIoTExceptions import publishTimeoutException
 
 # MySQL Configuration
 database = mysql.connector.connect(
-    host="database.ckozhfjjzal0.us-east-1.amazonaws.com",
+    host="database.ckozhfjjzal0.us-east-1.amazonaws.rds.com",
     user="admin",
     password="aRHnjDuknZhPZc4",
     database="parking"
