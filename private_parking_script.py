@@ -19,6 +19,7 @@ post_response_data = {
 }
 
 current_parking_status = {}
+last_processed_response = None  # Variable to store the last processed response
 
 endpoint = "a27eliy2xg4c5e-ats.iot.us-east-1.amazonaws.com"
 cert_filepath = "/home/pi/PrivateParking/mqtt/44bdbb017ed61e3180473d7562a7219625694010abfe0315ab96632a7fe8402b-certificate.pem.crt"
@@ -89,7 +90,7 @@ def handleResponseData(topic, payload, dup, qos, retain, **kwargs):
         post_response_data["message"] = data["message"]
 
 mqtt_connection.publish(topic="rpi/get_private_parking", payload=json.dumps({"request": "control_data"}), qos=mqtt.QoS.AT_LEAST_ONCE)
-subscribe_future, packet_id = mqtt_connection.subscribe(topic="rpi/get__private_parking", qos=mqtt.QoS.AT_LEAST_ONCE, callback=retrieveData)
+subscribe_future, packet_id = mqtt_connection.subscribe(topic="rpi/get_private_parking", qos=mqtt.QoS.AT_LEAST_ONCE, callback=retrieveData)
 subscribe_result = subscribe_future.result()
 if subscribe_future.done():
     print("Subscribed to rpi/get_private_parking")
@@ -106,14 +107,12 @@ def publish_to_cloud(data):
     except Exception as e:
         print(f"Error publishing to cloud: {e}")
 
-def handle_parking_event(slot_id, status, distance):
+def handle_parking_event(slot_id, status):
     current_status = current_parking_status.get(slot_id, None)
     if status == 0 and current_status == 1:
         end_parking_session(slot_id)
     elif status == 1 and current_status != 1:
         start_parking_session(slot_id)
-    elif status == 2:
-        log_system_alarm(slot_id, "Error at parking slot", "Parking sensor error detected")
     current_parking_status[slot_id] = status
     update_private_carpark_slot(slot_id, status)
 
@@ -147,17 +146,6 @@ def end_parking_session(slot_id):
     except Exception as e:
         print(f"Error ending parking session: {e}")
 
-def log_system_alarm(slot_id, alarm_type, description):
-    try:
-        localDatabase.query(
-            'INSERT INTO system_alarms (type, description, timestamp) VALUES (%s, %s, %s)',
-            params=(alarm_type, description, datetime.now())
-        )
-        # Publish to cloud
-        publish_to_cloud({"slot_id": slot_id, "type": alarm_type, "description": description, "timestamp": datetime.now().isoformat()})
-    except Exception as e:
-        print(f"Error logging system alarm: {e}")
-
 def update_private_carpark_slot(slot_id, status):
     try:
         # Update the private_carpark_slot table
@@ -169,11 +157,11 @@ def update_private_carpark_slot(slot_id, status):
         # Update the variables table
         if status == 1:  # If a car is occupying a slot
             localDatabase.query(
-                'UPDATE variables SET value = value + 1 WHERE name = "public_current_car_number"'
+                'UPDATE variables SET value = value + 1 WHERE name = "private_current_car_number"'
             )
         elif status == 0:  # If a car is leaving a slot
             localDatabase.query(
-                'UPDATE variables SET value = value - 1 WHERE name = "public_current_car_number"'
+                'UPDATE variables SET value = value - 1 WHERE name = "private_current_car_number"'
             )
 
         update_variables()
@@ -181,13 +169,12 @@ def update_private_carpark_slot(slot_id, status):
         # Publish to cloud
         publish_to_cloud({"slot_id": slot_id, "status": status})
     except Exception as e:
-        print(f"Error updating public carpark slot: {e}")
-
+        print(f"Error updating private carpark slot: {e}")
 
 def update_variables():
     try:
         cursor = localDatabase.connection.cursor()
-        # Update public_current_car_number
+        # Update private_current_car_number
         cursor.execute(
             'SELECT COUNT(*) FROM private_carpark_slot WHERE status = 1'
         )
@@ -197,7 +184,7 @@ def update_variables():
             (current_car_number,)
         )
         
-        # Update public_max_car_number
+        # Update private_max_car_number
         cursor.execute(
             'SELECT COUNT(*) FROM private_carpark_slot'
         )
@@ -212,33 +199,32 @@ def update_variables():
     except Exception as e:
         print(f"Error updating variables: {e}")
 
-
 if __name__ == "__main__":
     try:
         while True:
             response = iface.read_msg()
             if response:
-                print(f"Response: {response}")
-                try:
-                    data = json.loads(response)
-                    slot_id = data["slotID"]
-                    status = data["status"]
-                    distance = data["distance"]
+                if response != last_processed_response:  # Check if the response is the same as the last processed one
+                    print(f"Response: {response}")
+                    try:
+                        data = json.loads(response)
+                        slot_id = data["slotID"]
+                        status = data["status"]
 
-                    handle_parking_event(slot_id, status, distance)
-                    update_private_carpark_slot(slot_id, status)
+                        handle_parking_event(slot_id, status)
+                        update_private_carpark_slot(slot_id, status)
 
-                    publish_to_cloud(data)
+                        publish_to_cloud(data)
 
-                    # Example: Send an MQTT message if the status changes
-                    if status == 1:
-                        publish_to_cloud({"slot_id": slot_id, "status": "occupied", "distance": distance})
-                    elif status == 0:
-                        publish_to_cloud({"slot_id": slot_id, "status": "empty", "distance": distance})
+                        # Example: Send an MQTT message if the status changes
+                        if status == 1:
+                            publish_to_cloud({"slot_id": slot_id, "status": "occupied"})
+                        elif status == 0:
+                            publish_to_cloud({"slot_id": slot_id, "status": "empty"})
 
-                except json.JSONDecodeError:
-                    print(f"Received non-JSON response: {response}")
-
+                        last_processed_response = response  # Update the last processed response
+                    except json.JSONDecodeError:
+                        print(f"Received non-JSON response: {response}")
             time.sleep(0.1)
     except KeyboardInterrupt:
         print("Interrupted by user, disconnecting...")
