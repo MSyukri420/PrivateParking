@@ -98,4 +98,135 @@ def saveData(topic, payload, dup, qos, retain, **kwargs):
                 log_system_alarm(slot_id, "Error at parking slot", "Parking sensor error detected")
 
             current_parking_status[slot_id] = status
-            print(f"Updating public carpark
+            print(f"Updating public carpark slot for slot_id: {slot_id} with status: {status}")
+            update_private_carpark_slot(slot_id, status)
+    except Exception as e:
+        print(f"Error processing data: {e}")
+
+def start_parking_session(slot_id):
+    try:
+        cursor = database.cursor()
+        cursor.execute(
+            'INSERT INTO parking_sessions (slot_id, start_time, status) VALUES (%s, %s, %s)',
+            (slot_id, datetime.now(), 'active')
+        )
+        cursor.execute(
+            'UPDATE private_carpark_slot SET status = 1 WHERE id = %s',
+            (slot_id,)
+        )
+        database.commit()
+
+        update_variables(slot_id, 1)
+        
+        cursor.close()
+    except Exception as e:
+        print(f"Error starting parking session: {e}")
+
+def end_parking_session(slot_id):
+    try:
+        cursor = database.cursor()
+        cursor.execute(
+            'UPDATE parking_sessions SET end_time = %s, status = %s WHERE slot_id = %s AND end_time IS NULL',
+            (datetime.now(), 'completed', slot_id)
+        )
+        cursor.execute(
+            'UPDATE private_carpark_slot SET status = 0 WHERE id = %s',
+            (slot_id,)
+        )
+        database.commit()
+
+        update_variables(slot_id, 0)
+        
+        cursor.close()
+    except Exception as e:
+        print(f"Error ending parking session: {e}")
+
+def log_system_alarm(slot_id, alarm_type, description):
+    try:
+        cursor = database.cursor()
+        cursor.execute(
+            'INSERT INTO system_alarms (type, description, timestamp) VALUES (%s, %s, %s)',
+            (alarm_type, description, datetime.now())
+        )
+        database.commit()
+        cursor.close()
+    except Exception as e:
+        print(f"Error logging system alarm: {e}")
+
+def update_private_carpark_slot(slot_id, status):
+    try:
+        cursor = database.cursor()
+        cursor.execute(
+            'UPDATE private_carpark_slot SET status = %s WHERE id = %s',
+            (status, slot_id)
+        )
+        database.commit()
+        cursor.close()
+
+        update_variables(slot_id, status)
+    except Exception as e:
+        print(f"Error updating public carpark slot: {e}")
+
+def update_variables(slot_id, status):
+    try:
+        cursor = database.cursor()
+        if status == 1:  # If a car is occupying a slot
+            cursor.execute(
+                'UPDATE variables SET value = value + 1 WHERE name = "public_current_car_number"'
+            )
+        elif status == 0:  # If a car is leaving a slot
+            cursor.execute(
+                'UPDATE variables SET value = value - 1 WHERE name = "public_current_car_number"'
+            )
+
+        # Update public_max_car_number if needed
+        cursor.execute(
+            'SELECT value FROM variables WHERE name = "public_max_car_number"'
+        )
+        max_car_number = cursor.fetchone()
+        cursor.execute(
+            'SELECT value FROM variables WHERE name = "public_current_car_number"'
+        )
+        current_car_number = cursor.fetchone()
+
+        if current_car_number["value"] > max_car_number["value"]:
+            cursor.execute(
+                'UPDATE variables SET value = %s WHERE name = "public_max_car_number"',
+                (current_car_number["value"],)
+            )
+        
+        database.commit()
+        cursor.close()
+    except Exception as e:
+        print(f"Error updating variables: {e}")
+
+# MQTT Subscriptions
+print("Subscribing to topic 'rpi/get_private_parking'...")
+subscribe_future, packet_id = mqtt_connection.subscribe(
+    topic="rpi/get_private_parking",
+    qos=mqtt.QoS.AT_LEAST_ONCE,
+    callback=sendData
+)
+
+# Wait for the subscribe to succeed
+subscribe_result = subscribe_future.result()
+print("Subscribed with {}".format(str(subscribe_result['qos'])))
+
+print("Subscribing to topic 'rpi/post_private_parking'...")
+subscribe_future, packet_id = mqtt_connection.subscribe(
+    topic="rpi/post_private_parking",
+    qos=mqtt.QoS.AT_LEAST_ONCE,
+    callback=saveData
+)
+
+# Wait for the subscribe to succeed
+subscribe_result = subscribe_future.result()
+print("Subscribed with {}".format(str(subscribe_result['qos'])))
+
+try:
+    while True:
+        time.sleep(1)
+except KeyboardInterrupt:
+    print("Interrupted by user, disconnecting...")
+    mqtt_connection.disconnect().result()
+    print("Disconnected")
