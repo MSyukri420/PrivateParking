@@ -6,8 +6,8 @@ from awscrt import io, mqtt, auth, http
 from awsiot import mqtt_connection_builder
 from AWSIoTPythonSDK.exception.AWSIoTExceptions import publishTimeoutException
 
-# Print startup message
-print("Starting up private parking script...")
+# Print statement to indicate the script is starting up
+print("Starting Cloud_AWS_MQTT.py script...")
 
 # MySQL Configuration
 database = mysql.connector.connect(
@@ -18,9 +18,9 @@ database = mysql.connector.connect(
 )
 
 endpoint = "a27eliy2xg4c5e-ats.iot.us-east-1.amazonaws.com"
-cert_filepath = r"/home/pi/PrivateParking/mqtt/44bdbb017ed61e3180473d7562a7219625694010abfe0315ab96632a7fe8402b-certificate.pem.crt"
-pri_key_filepath =  r"/home/pi/PrivateParking/mqtt/44bdbb017ed61e3180473d7562a7219625694010abfe0315ab96632a7fe8402b-private.pem.key"
-ca_filepath = r"/home/pi/PrivateParking/mqtt/AmazonRootCA1.pem"
+cert_filepath = r"\home\pi\PrivateParking\mqtt\44bdbb017ed61e3180473d7562a7219625694010abfe0315ab96632a7fe8402b-certificate.pem.crt"
+pri_key_filepath = r"\home\pi\PrivateParking\mqtt\44bdbb017ed61e3180473d7562a7219625694010abfe0315ab96632a7fe8402b-private.pem.key"
+ca_filepath = r"\home\pi\PrivateParking\mqtt\AmazonRootCA1.pem"
 client_id = "ParkingSlot"
 
 # AWS IoT MQTT Client Setup
