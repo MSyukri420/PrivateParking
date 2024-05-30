@@ -11,7 +11,7 @@ print("Starting Cloud_AWS_MQTT.py script...")
 
 # MySQL Configuration
 database = mysql.connector.connect(
-    host="database.ckozhfjjzal0.us-east-1.amazonaws.rds.com",
+    host="database.ckozhfjjzal0.us-east-1.rds.amazonaws.com",
     user="admin",
     password="aRHnjDuknZhPZc4",
     database="parking"
