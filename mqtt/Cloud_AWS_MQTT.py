@@ -21,7 +21,7 @@ endpoint = "a27eliy2xg4c5e-ats.iot.us-east-1.amazonaws.com"
 cert_filepath = "/home/pi/PrivateParking/mqtt/44bdbb017ed61e3180473d7562a7219625694010abfe0315ab96632a7fe8402b-certificate.pem.crt"
 pri_key_filepath = "/home/pi/PrivateParking/mqtt/44bdbb017ed61e3180473d7562a7219625694010abfe0315ab96632a7fe8402b-private.pem.key"
 ca_filepath = "/home/pi/PrivateParking/mqtt/AmazonRootCA1.pem"
-client_id = "ParkingSlot"
+client_id = "Private Parking"
 
 # AWS IoT MQTT Client Setup
 event_loop_group = io.EventLoopGroup(1)
