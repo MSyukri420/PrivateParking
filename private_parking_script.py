@@ -88,20 +88,20 @@ def handleResponseData(topic, payload, dup, qos, retain, **kwargs):
         post_response_data["status"] = data["status"]
         post_response_data["message"] = data["message"]
 
-mqtt_connection.publish(topic="rpi/get_response", payload=json.dumps({"request": "control_data"}), qos=mqtt.QoS.AT_LEAST_ONCE)
-subscribe_future, packet_id = mqtt_connection.subscribe(topic="rpi/get_response", qos=mqtt.QoS.AT_LEAST_ONCE, callback=retrieveData)
+mqtt_connection.publish(topic="rpi/get_private_parking", payload=json.dumps({"request": "control_data"}), qos=mqtt.QoS.AT_LEAST_ONCE)
+subscribe_future, packet_id = mqtt_connection.subscribe(topic="rpi/get__private_parking", qos=mqtt.QoS.AT_LEAST_ONCE, callback=retrieveData)
 subscribe_result = subscribe_future.result()
 if subscribe_future.done():
-    print("Subscribed to rpi/get_response")
+    print("Subscribed to rpi/get_private_parking")
 
-subscribe_future, packet_id = mqtt_connection.subscribe(topic="rpi/post_response", qos=mqtt.QoS.AT_LEAST_ONCE, callback=handleResponseData)
+subscribe_future, packet_id = mqtt_connection.subscribe(topic="rpi/post_private_parking", qos=mqtt.QoS.AT_LEAST_ONCE, callback=handleResponseData)
 subscribe_result = subscribe_future.result()
 if subscribe_future.done():
-    print("Subscribed to rpi/post_response")
+    print("Subscribed to rpi/post_private_parking")
 
 def publish_to_cloud(data):
     try:
-        publish_future, packet_id = mqtt_connection.publish("rpi/post_request", json.dumps(data), mqtt.QoS.AT_LEAST_ONCE)
+        publish_future, packet_id = mqtt_connection.publish("rpi/post_private_parking", json.dumps(data), mqtt.QoS.AT_LEAST_ONCE)
         publish_result = publish_future.result()
     except Exception as e:
         print(f"Error publishing to cloud: {e}")
