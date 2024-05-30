@@ -95,7 +95,7 @@ def saveData(topic, payload, dup, qos, retain, **kwargs):
                 start_parking_session(slot_id)
 
             current_parking_status[slot_id] = status
-            print(f"Updating public carpark slot for slot_id: {slot_id} with status: {status}")
+            print(f"Updating private carpark slot for slot_id: {slot_id} with status: {status}")
             update_private_carpark_slot(slot_id, status)
     except Exception as e:
         print(f"Error processing data: {e}")
@@ -150,12 +150,11 @@ def update_private_carpark_slot(slot_id, status):
 
         update_variables()
     except Exception as e:
-        print(f"Error updating public carpark slot: {e}")
+        print(f"Error updating private carpark slot: {e}")
 
 def update_variables():
     try:
         cursor = database.cursor()
-        # Update public_current_car_number
         cursor.execute(
             'SELECT COUNT(*) FROM private_carpark_slot WHERE status = 1'
         )
@@ -165,7 +164,6 @@ def update_variables():
             (current_car_number,)
         )
         
-        # Update public_max_car_number
         cursor.execute(
             'SELECT COUNT(*) FROM private_carpark_slot'
         )
